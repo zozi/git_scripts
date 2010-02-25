@@ -12,15 +12,16 @@
 
 require 'yaml'
 
+use_global_gitconfig = nil
 unless File.exists?(".git")
-  puts "This doesn't look like a git repository."
-  exit 1
+  use_global_gitconfig = ' --global '
 end
 
 ## Configuration
 
 def get_pairs_config
   pairs_file_path = nil
+  original_directory_location = Dir.pwd
   until pairs_file_path || Dir.pwd == File.expand_path('/') do
     if File.exists?(".pairs")
       pairs_file_path = File.expand_path(".pairs")
@@ -45,7 +46,9 @@ email:
 INSTRUCTIONS
     exit(1)
   end
-  pairs_file_path ? YAML.load_file(".pairs") : {}
+  pairs_file = pairs_file_path ? YAML.load_file(".pairs") : {}
+  Dir.chdir original_directory_location
+  pairs_file
 end
 
 ## End of configuration
@@ -79,12 +82,19 @@ if authors.any?
   end
   prefix = emails.size > 1 ? [config['email']['prefix']] : []
   email = (prefix + emails).join('+')
+  
+  if use_global_gitconfig
+    puts "Updating the global Git user and e-mail (as specified in ~/.gitconfig)"
+  else
+    puts "Updating the Git user and e-mail for this particular Git repository only (as specified in ./.git/config)"
+  end
 
-  system("git", "config", "--global", "user.name", "#{authors}")
-  system("git", "config", "--global", "user.email", "#{email}@#{config['email']['domain']}")
+  `git config #{use_global_gitconfig} user.name '#{authors}'`
+  `git config #{use_global_gitconfig} user.email #{email}@#{config['email']['domain']}`
 else
-  `git config --global --unset user.name`
-  `git config --global --unset user.email`
-  puts "Unset user.name and user.email"
+  `git config #{use_global_gitconfig} --unset user.name`
+  `git config #{use_global_gitconfig} --unset user.email`
+  global_or_local_message = use_global_gitconfig ? 'global' : 'local (i.e., for this repository only)'
+  puts "Unset the #{global_or_local_message} Git user.name and user.email"
 end
 puts `git config -l | grep user | tail -2`
