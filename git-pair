@@ -89,7 +89,7 @@ if authors.any?
     puts "Updating the Git user and e-mail for this particular Git repository only (as specified in ./.git/config)"
   end
 
-  `git config #{use_global_gitconfig} user.name '#{authors}'`
+  `git config #{use_global_gitconfig} user.name "#{authors}"`
   `git config #{use_global_gitconfig} user.email #{email}@#{config['email']['domain']}`
 else
   `git config #{use_global_gitconfig} --unset user.name`
