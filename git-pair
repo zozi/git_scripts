@@ -29,6 +29,10 @@ def get_pairs_config
       Dir.chdir ".."
     end
   end
+
+  dev_env_pair_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "/zozi_git_pairs/.pairs"))
+  pairs_file_path = dev_env_pair_path if File.exist?(dev_env_pair_path) && !pairs_file_path
+
   unless pairs_file_path
     puts <<-INSTRUCTIONS
 Could not find a .pairs file. Create a YAML file in your project or home directory.
@@ -46,7 +50,7 @@ email:
 INSTRUCTIONS
     exit(1)
   end
-  pairs_file = pairs_file_path ? YAML.load_file(".pairs") : {}
+  pairs_file = pairs_file_path ? YAML.load_file(pairs_file_path) : {}
   Dir.chdir original_directory_location
   pairs_file
 end
